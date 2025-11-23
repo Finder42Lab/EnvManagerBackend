@@ -12,7 +12,7 @@ class ProjectGroup(BaseDBModel):
 
     projects: Mapped[list["Project"]] = relationship(
         order_by=lambda: [
-            func.array_length(Project.includes, 1),
+            func.array_length(Project.includes, 1).nullsfirst(),
             Project.name,
         ]
     )
