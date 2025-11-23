@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: env-manager
+    container_name: env-manager-dev
     env_file: .env
     restart: always
     volumes:
@@ -16,7 +16,7 @@ services:
       - "${API_PORT:-8420}:8000"
   postgres:
     image: postgres:latest
-    container_name: env-manager-db
+    container_name: env-manager-dev-db
     restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: env-manager-migrate
+    container_name: env-manager-dev-migrate
     env_file: .env
     command: uv run alembic upgrade head
     networks:
@@ -44,18 +44,6 @@ services:
     depends_on:
       - app
       - postgres
-  frontend:
-    build:
-      context: https://github.com/Finder42Lab/EnvManagerFrontend.git
-      dockerfile: ./Dockerfile
-      args:
-        API_HOST: ${VITE_API_HOST}
-        VERSION: ${VITE_VERSION}
-    container_name: env-manager-frontend
-    env_file: .env
-    restart: always
-    ports:
-      - "${FRONTEND_PORT:-8421}:80"
 
 networks:
   frontend:
