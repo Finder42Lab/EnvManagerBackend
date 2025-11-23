@@ -11,7 +11,7 @@ from db.models import Variable
 from db.session import get_db_session
 from helpers.db import upsert_entities
 from helpers.project import get_project_variables
-from routes.variables.schems import WriteVariableResponse
+from routes.variables.schems import WriteVariableResponse, VariableBulkCreateRequest
 from schemas.variable import VariableSchema
 
 router = APIRouter()
@@ -30,10 +30,14 @@ async def retrieve_variable(
     variable_id: UUID,
     db_session: Annotated[AsyncSession, Depends(get_db_session)],
 ):
-    query = select(Variable).where(Variable.id == variable_id).options(selectinload(Variable.project))
+    query = (
+        select(Variable)
+        .where(Variable.id == variable_id)
+        .options(selectinload(Variable.project))
+    )
     query_result = await db_session.execute(query)
     variable = query_result.scalar_one_or_none()
-    
+
     return variable
 
 
@@ -49,10 +53,37 @@ async def write_variable(
     )
 
 
-@router.delete("/{variable_id}")
+@router.delete("/{variable_id}/")
 async def delete_variable(
     variable_id: str,
     db_session: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     query = delete(Variable).where(Variable.id == variable_id)
     await db_session.execute(query)
+
+
+@router.post("/bulk_create/")
+async def bulk_write_variables(
+    body: VariableBulkCreateRequest,
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    variables_lines = body.variables_text.splitlines()
+    variables_data = []
+    
+    for line in variables_lines:
+        if "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        variables_data.append(
+            {
+                "name": name.strip(),
+                "value": value.strip(),
+                "project_id": body.project_id,
+            }
+        )
+
+    await upsert_entities(
+        db_session=db_session,
+        model_cls=Variable,
+        fields=variables_data,
+    )
