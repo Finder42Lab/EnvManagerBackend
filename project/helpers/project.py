@@ -51,12 +51,15 @@ async def get_project_variables(
 
     recursive_cte = recursive_anchor.union_all(select(recursive_body))
 
-    query = (
+    subquery = (
         select(recursive_cte)
         .distinct(recursive_cte.c.name)
         .where(recursive_cte.c.id.is_not(None))
-        .order_by(recursive_cte.c.name, recursive_cte.c.level)
+        .order_by(recursive_cte.c.name)
+        .subquery()
     )
+
+    query = select(subquery).order_by(subquery.c.level)
 
     query_result = await db_session.execute(query)
     items = query_result.all()

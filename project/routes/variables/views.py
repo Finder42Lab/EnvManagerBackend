@@ -69,7 +69,7 @@ async def bulk_write_variables(
 ):
     variables_lines = body.variables_text.splitlines()
     variables_data = []
-    
+
     for line in variables_lines:
         if "=" not in line:
             continue

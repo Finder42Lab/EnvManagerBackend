@@ -24,11 +24,7 @@ router = APIRouter()
 async def list_projects(
     db_session: Annotated[AsyncSession, Depends(get_db_session)],
 ):
-    query = (
-        select(ProjectGroup)
-        .order_by(ProjectGroup.name)
-        .options(selectinload(ProjectGroup.projects))
-    )
+    query = select(ProjectGroup).options(selectinload(ProjectGroup.projects))
     query_result = await db_session.execute(query)
     projects = query_result.scalars().all()
 

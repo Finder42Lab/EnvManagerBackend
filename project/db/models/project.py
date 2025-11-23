@@ -1,4 +1,4 @@
-from sqlalchemy import func, String, ForeignKey, UUID
+from sqlalchemy import func, String, ForeignKey, UUID, text
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,7 +11,10 @@ class ProjectGroup(BaseDBModel):
     name: Mapped[str]
 
     projects: Mapped[list["Project"]] = relationship(
-        order_by=lambda: func.array_length(Project.includes, 1).desc()
+        order_by=lambda: [
+            func.array_length(Project.includes, 1),
+            Project.name,
+        ]
     )
 
 
