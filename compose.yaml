@@ -13,7 +13,7 @@ services:
       - backend
     command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8420:8000"
+      - "${API_PORT:-8420}:8000"
   postgres:
     image: postgres:latest
     container_name: env-manager-db
@@ -32,9 +32,6 @@ services:
       retries: 5
     networks:
       - backend
-    ports:
-      - "8421:5432"
-
   migrate:
     build:
       context: .
@@ -47,7 +44,18 @@ services:
     depends_on:
       - app
       - postgres
-
+  frontend:
+    build:
+      context: https://github.com/Finder42Lab/EnvManagerFrontend.git
+      dockerfile: ./Dockerfile
+      args:
+        API_HOST: ${VITE_API_HOST}
+        VERSION: ${VITE_VERSION}
+    container_name: env-manager-frontend
+    env_file: .env
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-8421}:80"
 
 networks:
   frontend:
